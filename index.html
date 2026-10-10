@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Centinela · Códice de Ithirion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>html,body{margin:0;height:100%;background:#03060d;color:#e6e9ef;overflow:hidden}a{color:#c5cdd9;text-decoration:none}a:hover{color:#fff}*{box-sizing:border-box}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:rgba(197,205,217,.2)}::-webkit-scrollbar-track{background:transparent}input::placeholder{color:#717a89}</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;font-family:'EB Garamond',Georgia,serif;color:{{ th.ink }}">
+  <iframe id="cent-map" src="mapa-embebido.html" title="Mapa galáctico" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#010204"></iframe>
+
+  <sc-if value="{{ narr }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 60% 50%,rgba(0,0,0,0) 55%,rgba(110,14,8,.4) 100%)"></div>
+  </sc-if>
+
+  <header style="position:absolute;left:0;right:0;top:0;height:68px;display:flex;align-items:center;gap:clamp(16px,2.4vw,56px);padding:0 clamp(12px,1.6vw,24px);background:{{ th.side }};border-bottom:1px solid {{ th.line }}">
+    <div style="display:flex;align-items:center;gap:20px;flex:none">
+      <div style="width:42px;height:42px;border-radius:50%;border:1px solid {{ th.soft }};display:flex;align-items:center;justify-content:center;gap:4px">
+        <span style="width:1px;height:20px;background:{{ th.accent }}"></span><span style="width:1px;height:14px;background:{{ th.accent }}"></span>
+      </div>
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}"><span style="font:400 clamp(17px,1.7vw,26px) 'Cormorant Garamond',serif;letter-spacing:clamp(.18em,1.6vw,.42em);color:{{ th.ink }};white-space:nowrap">CENTINELA</span></sc-if>
+    </div>
+    <nav style="flex:none;display:flex;align-items:stretch;gap:clamp(12px,1.8vw,34px);height:100%">
+      <sc-for list="{{ topTabs }}" as="tt" hint-placeholder-count="6">
+        <button onClick="{{ tt.onClick }}" style="position:relative;background:transparent;border:0;cursor:pointer;padding:0 2px;font:500 clamp(11px,.9vw,13px) 'EB Garamond',serif;letter-spacing:clamp(.08em,.9vw,.18em);text-transform:uppercase;color:{{ tt.col }};white-space:nowrap" style-hover="color:#fff">
+          {{ tt.name }}
+          <sc-if value="{{ tt.on }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:0;right:0;bottom:16px;height:1px;background:{{ th.accent }};box-shadow:0 0 8px {{ th.accent }}"></span></sc-if>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex:none">
+      <button onClick="{{ toggleIndex }}" title="Índice del códice" style="display:flex;align-items:center;gap:10px;height:42px;background:{{ idxBg }};border:1px solid {{ th.line2 }};border-radius:10px;color:{{ th.ink }};cursor:pointer;padding:0 clamp(10px,1vw,16px);font:500 12px 'EB Garamond',serif;letter-spacing:.14em;white-space:nowrap" style-hover="border-color:#fff">
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="width:12px;height:1px;background:{{ th.accent }}"></span><span style="width:12px;height:1px;background:{{ th.accent }}"></span><span style="width:8px;height:1px;background:{{ th.accent }}"></span></span><sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">ÍNDICE</sc-if>
+      </button>
+      <button onClick="{{ toggleNarr }}" title="Muestra lo que la galaxia no sabe" style="display:flex;align-items:center;gap:10px;height:42px;background:{{ th.hl }};border:1px solid {{ th.soft }};border-radius:10px;color:{{ th.ink }};cursor:pointer;padding:0 clamp(10px,1vw,16px);font:500 12px 'EB Garamond',serif;letter-spacing:.14em;white-space:nowrap" style-hover="border-color:#fff">
+        <span style="width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.accent }};background:{{ narrDot }}"></span><sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">NARRADOR</sc-if>
+      </button>
+      <div style="position:relative">
+        <div style="display:flex;align-items:center;gap:10px;width:{{ searchW }};height:42px;padding:0 12px 0 16px;border:1px solid {{ th.line }};border-radius:10px;background:rgba(255,255,255,.02)">
+          <span style="position:relative;width:13px;height:13px;flex:none"><span style="position:absolute;left:0;top:0;width:10px;height:10px;border:1.4px solid {{ th.dim }};border-radius:50%"></span><span style="position:absolute;left:9px;top:9px;width:5px;height:1.4px;background:{{ th.dim }};transform:rotate(45deg);transform-origin:0 0"></span></span>
+          <input id="cent-search" value="{{ q }}" onInput="{{ onQ }}" placeholder="Buscar en el códice…" style="flex:1;min-width:0;background:transparent;border:0;color:{{ th.ink }};font:400 16px 'EB Garamond',serif;outline:none">
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:{{ th.dim }};border:1px solid {{ th.line }};border-radius:4px;padding:2px 6px">/</span>
+        </div>
+        <sc-if value="{{ hasResults }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;right:0;top:50px;width:340px;background:{{ th.panel }};border:1px solid {{ th.line }};border-radius:10px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;flex-direction:column;padding:6px 0;z-index:5">
+            <sc-for list="{{ results }}" as="r" hint-placeholder-count="0">
+              <button onClick="{{ r.onClick }}" style="display:flex;align-items:center;gap:14px;background:transparent;border:0;cursor:pointer;padding:9px 16px;text-align:left;color:{{ th.ink }}" style-hover="background:rgba(255,255,255,.05)">
+                <span style="display:block;background:url('{{ r.gl }}') center/contain no-repeat;width:18px;height:18px;flex:none;opacity:.8"></span>
+                <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <span style="font:400 17px 'EB Garamond',serif">{{ r.title }}</span>
+                  <span style="font:italic 400 13.5px 'EB Garamond',serif;color:{{ th.dim }}">{{ r.sub }}</span>
+                </span>
+                <span style="font:400 11px 'IBM Plex Mono',monospace;color:{{ th.dim }}">{{ r.folio }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </header>
+  <sc-if value="{{ narr }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;right:0;top:67px;height:2px;background:#e8634b;box-shadow:0 0 14px rgba(232,99,75,.7);pointer-events:none"></div>
+  </sc-if>
+
+  <aside id="cent-side" style="position:absolute;left:0;top:68px;bottom:0;width:232px;overflow-y:auto;overflow-x:hidden;background:{{ th.side }};border-right:1px solid {{ th.line }};padding:14px 0 28px">
+    <sc-if value="{{ inSys }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;padding-bottom:12px;margin-bottom:8px;border-bottom:1px solid {{ th.line }}">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 20px 8px">
+          <span style="width:9px;height:9px;border-radius:50%;background:{{ th.accent }};box-shadow:0 0 8px {{ th.accent }}"></span>
+          <span style="font:500 11px 'EB Garamond',serif;letter-spacing:.2em;color:{{ th.accent }}">SISTEMA {{ sysNameUp }}</span>
+        </div>
+        <sc-for list="{{ planets }}" as="pl" hint-placeholder-count="0">
+          <button onClick="{{ pl.onClick }}" style="display:flex;align-items:center;gap:14px;margin:0 8px;border-radius:6px;background:{{ pl.bg }};border:0;cursor:pointer;padding:7px 12px;text-align:left;color:{{ th.ink }};font:400 16px 'EB Garamond',serif" style-hover="background:rgba(255,255,255,.04)">
+            <span style="width:11px;height:11px;border-radius:50%;border:1px solid {{ th.dim }}"></span>{{ pl.name }}
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="6">
+      <div id="{{ g.domId }}" style="display:flex;flex-direction:column;padding-bottom:10px">
+        <button onClick="{{ g.toggle }}" style="display:flex;align-items:baseline;gap:12px;background:transparent;border:0;cursor:pointer;padding:16px 20px 8px;color:{{ th.dim }};text-align:left" style-hover="color:#fff">
+          <span style="width:18px;font:500 14px 'Cormorant Garamond',serif;color:{{ th.accent }}">{{ g.num }}</span>
+          <span style="flex:1;font:500 10.5px 'EB Garamond',serif;letter-spacing:.22em;text-transform:uppercase">{{ g.name }}</span>
+          <span style="font:400 12px 'EB Garamond',serif">{{ g.chev }}</span>
+        </button>
+        <sc-if value="{{ g.open }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="4">
+            <button onClick="{{ it.onClick }}" onMouseEnter="{{ it.enter }}" onMouseLeave="{{ unpeek }}" style="display:flex;align-items:center;gap:12px;width:calc(100% - 12px);margin:1px 0 1px 6px;border-radius:4px 0 0 4px;background:{{ it.bg }};border:0;border-right:1px solid {{ it.edge }};cursor:pointer;padding:7px 14px 7px 16px;text-align:left;color:{{ th.ink }}" style-hover="background:rgba(255,255,255,.04)">
+              <span style="display:block;background:url('{{ it.gl }}') center/contain no-repeat;flex:none;width:16px;height:16px"></span>
+              <span style="flex:1;min-width:0;font:400 15.5px/1.25 'EB Garamond',serif;color:{{ it.tc }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span>
+              <span style="flex:none;font:400 10px 'IBM Plex Mono',monospace;color:{{ it.fc }}">{{ it.folio }}</span>
+            </button>
+          </sc-for>
+        </sc-if>
+      </div>
+    </sc-for>
+  </aside>
+
+  <sc-if value="{{ showArt }}" hint-placeholder-val="{{ false }}">
+    <article style="position:absolute;left:232px;top:68px;bottom:0;width:clamp(440px,40vw,620px);background:{{ th.page }};border-right:1px solid {{ th.line }};box-shadow:30px 0 80px rgba(0,0,0,.55);overflow:hidden">
+      <div style="position:absolute;inset:12px;border:1px solid {{ th.line2 }};pointer-events:none"></div>
+      <div style="position:absolute;inset:16px;border:1px solid {{ th.line }};pointer-events:none"></div>
+      <span style="position:absolute;left:8px;top:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }};pointer-events:none"></span>
+      <span style="position:absolute;right:8px;top:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }};pointer-events:none"></span>
+      <span style="position:absolute;left:8px;bottom:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }};pointer-events:none"></span>
+      <span style="position:absolute;right:8px;bottom:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }};pointer-events:none"></span>
+
+      <div id="cent-page" style="position:absolute;inset:17px;overflow-y:auto;overflow-x:hidden;padding:18px clamp(24px,2.6vw,40px) 40px;display:flex;flex-direction:column;gap:24px;transform-origin:left center">
+        <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid {{ th.line }}">
+          <span style="flex:1;min-width:0;font:500 10px 'EB Garamond',serif;letter-spacing:.3em;color:{{ th.dim }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ art.book }}</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:{{ th.dim }}">{{ art.folio }}</span>
+          <div style="display:flex;gap:4px">
+            <button onClick="{{ goBack }}" title="Folio anterior" style="width:28px;height:28px;background:transparent;border:1px solid {{ th.line }};color:{{ backCol }};cursor:pointer;font:400 17px/1 'EB Garamond',serif" style-hover="border-color:#fff">‹</button>
+            <button onClick="{{ goFwd }}" title="Folio siguiente" style="width:28px;height:28px;background:transparent;border:1px solid {{ th.line }};color:{{ fwdCol }};cursor:pointer;font:400 17px/1 'EB Garamond',serif" style-hover="border-color:#fff">›</button>
+            <button onClick="{{ closeArt }}" title="Cerrar" style="width:28px;height:28px;background:transparent;border:1px solid {{ th.line }};color:{{ th.dim }};cursor:pointer;font:300 20px/1 'EB Garamond',serif" style-hover="color:#fff;border-color:#fff">×</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding-top:6px">
+          <span style="display:block;background:url('{{ art.gl }}') center/contain no-repeat;width:58px;height:58px"></span>
+          <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};margin-top:4px">{{ art.kind }}</span>
+          <h2 style="margin:0;font:500 clamp(38px,3.4vw,52px)/1.02 'Cormorant Garamond',serif;letter-spacing:.02em;color:{{ th.ink }};text-wrap:balance">{{ art.title }}</h2>
+          <sc-if value="{{ art.hasLema }}" hint-placeholder-val="{{ false }}">
+            <span style="font:italic 400 18px 'EB Garamond',serif;color:{{ th.body }};max-width:40ch">{{ art.lema }}</span>
+          </sc-if>
+          <sc-if value="{{ art.hasAlias }}" hint-placeholder-val="{{ false }}">
+            <span style="font:italic 400 16px 'EB Garamond',serif;color:{{ th.dim }}">La galaxia la conoce como <span style="text-decoration:line-through;text-decoration-color:{{ th.accent }}">{{ art.alias }}</span></span>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:10px;width:70%;margin-top:8px">
+            <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,0,0,0),{{ th.line2 }})"></span>
+            <span style="width:5px;height:5px;transform:rotate(45deg);border:1px solid {{ th.soft }}"></span>
+            <span style="width:3px;height:3px;border-radius:50%;background:{{ th.accent }}"></span>
+            <span style="width:5px;height:5px;transform:rotate(45deg);border:1px solid {{ th.soft }}"></span>
+            <span style="flex:1;height:1px;background:linear-gradient(90deg,{{ th.line2 }},rgba(0,0,0,0))"></span>
+          </div>
+        </div>
+
+        <sc-if value="{{ art.hasLead }}" hint-placeholder-val="{{ false }}">
+          <p data-burn="{{ art.leadBurn }}" style="margin:0;font:400 17.5px/1.62 'EB Garamond',serif;color:{{ th.ink }};text-wrap:pretty"><span style="float:left;width:64px;height:64px;margin:5px 14px 2px 0;display:flex;align-items:center;justify-content:center;border:1px solid {{ th.soft }};box-shadow:inset 0 0 0 4px {{ th.pageFlat }},inset 0 0 0 5px {{ th.line2 }};font:500 46px/1 'Cormorant Garamond',serif;color:{{ th.accent }};background:{{ th.hl }}">{{ art.cap }}</span><sc-for list="{{ art.lead }}" as="sg" hint-placeholder-count="0"><sc-if value="{{ sg.lk }}" hint-placeholder-val="{{ false }}"><a onClick="{{ sg.onClick }}" onMouseEnter="{{ sg.enter }}" onMouseLeave="{{ unpeek }}" style="color:{{ th.ink }};border-bottom:1px solid {{ th.soft }};cursor:pointer" style-hover="color:#fff;border-bottom-color:#fff">{{ sg.t }}</a></sc-if><sc-if value="{{ sg.tx }}" hint-placeholder-val="{{ true }}">{{ sg.t }}</sc-if></sc-for></p>
+        </sc-if>
+
+        <sc-if value="{{ art.isEntry }}" hint-placeholder-val="{{ false }}">
+          <figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+            <div style="position:relative;padding:7px;border:1px solid {{ th.line2 }}">
+              <span style="position:absolute;left:-4px;top:-4px;width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+              <span style="position:absolute;right:-4px;top:-4px;width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+              <span style="position:absolute;left:-4px;bottom:-4px;width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+              <span style="position:absolute;right:-4px;bottom:-4px;width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+              <div style="position:relative;height:clamp(190px,17vw,280px);border:1px solid {{ th.line }};overflow:hidden">
+                <image-slot id="{{ art.imgId }}" shape="rect" placeholder="Arrastra aquí una lámina: retrato, reliquia o mapa"></image-slot>
+              </div>
+            </div>
+            <figcaption style="text-align:center;font:italic 400 14px 'EB Garamond',serif;color:{{ th.dim }}">{{ art.plate }}</figcaption>
+          </figure>
+        </sc-if>
+
+        <sc-if value="{{ art.hasFields }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px">
+            <sc-for list="{{ art.fields }}" as="f" hint-placeholder-count="0">
+              <div style="display:flex;flex-direction:column;gap:4px;padding:11px 0 12px;border-top:1px solid {{ th.line }};min-width:0">
+                <span style="font:500 9.5px 'EB Garamond',serif;letter-spacing:.24em;text-transform:uppercase;color:{{ f.kc }}">{{ f.k }}</span>
+                <span style="font:400 16.5px/1.3 'EB Garamond',serif">{{ f.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ art.isEntry }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:center;gap:34px;border-bottom:1px solid {{ th.line }};margin-top:4px">
+            <sc-for list="{{ artTabs }}" as="at" hint-placeholder-count="3">
+              <button onClick="{{ at.onClick }}" style="position:relative;background:transparent;border:0;cursor:pointer;padding:12px 0;font:500 11px 'EB Garamond',serif;letter-spacing:.24em;text-transform:uppercase;color:{{ at.col }}" style-hover="color:#fff">
+                {{ at.name }}
+                <sc-if value="{{ at.on }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:0;right:0;bottom:-1px;height:1px;background:{{ th.accent }};box-shadow:0 0 8px {{ th.accent }}"></span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabDesc }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <sc-for list="{{ art.pub }}" as="p" hint-placeholder-count="0">
+              <p style="margin:0;font:400 16.5px/1.64 'EB Garamond',serif;color:{{ th.body }};text-wrap:pretty"><sc-for list="{{ p.segs }}" as="sg" hint-placeholder-count="0"><sc-if value="{{ sg.lk }}" hint-placeholder-val="{{ false }}"><a onClick="{{ sg.onClick }}" onMouseEnter="{{ sg.enter }}" onMouseLeave="{{ unpeek }}" style="color:{{ th.ink }};border-bottom:1px solid {{ th.soft }};cursor:pointer" style-hover="color:#fff;border-bottom-color:#fff">{{ sg.t }}</a></sc-if><sc-if value="{{ sg.tx }}" hint-placeholder-val="{{ true }}">{{ sg.t }}</sc-if></sc-for></p>
+            </sc-for>
+            <sc-if value="{{ art.pending }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0;font:italic 400 17px 'EB Garamond',serif;color:{{ th.dim }};text-align:center">Folio en blanco. Todavía sin desarrollar en el lore.</p>
+            </sc-if>
+
+            <sc-if value="{{ art.sealed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px;padding:18px 20px 20px;border:1px solid {{ th.line }};background:repeating-linear-gradient(135deg,rgba(255,255,255,.014) 0 6px,rgba(0,0,0,0) 6px 12px)">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.dim }}"></span>
+                  <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.26em;color:{{ th.dim }}">PASAJE SELLADO</span>
+                  <span style="flex:1;height:1px;background:{{ th.line }}"></span>
+                </div>
+                <sc-for list="{{ art.redact }}" as="rd" hint-placeholder-count="0">
+                  <div style="display:flex;flex-direction:column;gap:9px">
+                    <sc-for list="{{ rd.bars }}" as="b" hint-placeholder-count="0">
+                      <span style="display:block;height:11px;width:{{ b.w }};background:repeating-linear-gradient(90deg,{{ th.bar }} 0 3px,#0c121e 3px 4px)"></span>
+                    </sc-for>
+                  </div>
+                </sc-for>
+                <span style="font:italic 400 14px 'EB Garamond',serif;color:{{ th.dim }}">El códice guarda este pasaje bajo sello.</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ art.hasOc }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="width:7px;height:7px;transform:rotate(45deg);background:#e8634b"></span>
+                  <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.26em;color:#e8634b">LO QUE LA GALAXIA NO SABE</span>
+                  <span style="flex:1;height:1px;background:rgba(232,99,75,.35)"></span>
+                </div>
+                <sc-for list="{{ art.oc }}" as="p" hint-placeholder-count="0">
+                  <p data-burn="1" style="margin:0;font:400 16.5px/1.64 'EB Garamond',serif;color:#f3ddd3;text-wrap:pretty"><sc-for list="{{ p.segs }}" as="sg" hint-placeholder-count="0"><sc-if value="{{ sg.lk }}" hint-placeholder-val="{{ false }}"><a onClick="{{ sg.onClick }}" onMouseEnter="{{ sg.enter }}" onMouseLeave="{{ unpeek }}" style="color:#fff;border-bottom:1px solid rgba(232,99,75,.6);cursor:pointer" style-hover="border-bottom-color:#fff">{{ sg.t }}</a></sc-if><sc-if value="{{ sg.tx }}" hint-placeholder-val="{{ true }}">{{ sg.t }}</sc-if></sc-for></p>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ art.foot }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0;font:italic 400 15px 'EB Garamond',serif;color:{{ th.dim }}">{{ art.foot }}</p>
+            </sc-if>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+              <sc-if value="{{ art.hasMap }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ art.onMap }}" style="flex:1;min-width:170px;height:44px;background:transparent;border:1px solid {{ th.soft }};color:{{ th.ink }};cursor:pointer;font:500 11.5px 'EB Garamond',serif;letter-spacing:.24em" style-hover="background:rgba(255,255,255,.05)">VER EN EL MAPA</button>
+              </sc-if>
+              <sc-if value="{{ art.hasSys }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ art.onSys }}" style="flex:1;min-width:170px;height:44px;background:{{ th.hl }};border:1px solid {{ th.soft }};color:{{ th.ink }};cursor:pointer;font:500 11.5px 'EB Garamond',serif;letter-spacing:.24em" style-hover="background:rgba(255,255,255,.08)">{{ art.sysLabel }}</button>
+              </sc-if>
+            </div>
+            <sc-if value="{{ art.hasNext }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;padding-top:20px;border-top:1px solid {{ th.line }}">
+                <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.26em;color:{{ th.dim }}">SIGUE LEYENDO</span>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+                  <sc-for list="{{ art.next }}" as="nx" hint-placeholder-count="0">
+                    <button onClick="{{ nx.onClick }}" onMouseEnter="{{ nx.enter }}" onMouseLeave="{{ unpeek }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px 14px 16px;background:transparent;border:1px solid {{ th.line }};cursor:pointer;text-align:left;color:{{ th.ink }}" style-hover="border-color:{{ th.soft }};background:{{ th.hl }}">
+                      <span style="display:block;width:22px;height:22px;background:url('{{ nx.gl }}') center/contain no-repeat"></span>
+                      <span style="font:400 17px/1.2 'EB Garamond',serif">{{ nx.title }}</span>
+                      <span style="font:italic 400 13.5px/1.3 'EB Garamond',serif;color:{{ th.dim }}">{{ nx.why }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabRel }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div style="position:relative;width:100%;aspect-ratio:1/1">
+              <div style="position:absolute;left:14%;top:12%;width:72%;height:76%;border:1px solid {{ th.line }};border-radius:50%"></div>
+              <div style="position:absolute;left:36%;top:36%;width:28%;height:28%;border:1px dashed {{ th.line }};border-radius:50%"></div>
+              <sc-for list="{{ cons.edges }}" as="ed" hint-placeholder-count="0">
+                <span style="position:absolute;left:{{ ed.x }};top:{{ ed.y }};width:{{ ed.len }};height:1px;background:{{ ed.c }};transform:rotate({{ ed.rot }});transform-origin:0 0;pointer-events:none"></span>
+              </sc-for>
+              <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none">
+                <span style="width:64px;height:64px;border-radius:50%;background:{{ th.pageFlat }};border:1px solid {{ th.soft }};display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px {{ th.hl }}"><span style="display:block;background:url('{{ cons.gl }}') center/contain no-repeat;width:40px;height:40px"></span></span>
+                <span style="font:500 16px 'Cormorant Garamond',serif;letter-spacing:.06em;color:{{ th.ink }};white-space:nowrap;text-shadow:0 0 6px #000">{{ cons.title }}</span>
+              </div>
+              <sc-for list="{{ cons.nodes }}" as="nd" hint-placeholder-count="0">
+                <button onClick="{{ nd.onClick }}" onMouseEnter="{{ nd.enter }}" onMouseLeave="{{ unpeek }}" style="position:absolute;left:{{ nd.x }};top:{{ nd.y }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;background:transparent;border:0;cursor:pointer;padding:4px;color:{{ th.ink }};max-width:120px" style-hover="color:#fff">
+                  <span style="width:34px;height:34px;border-radius:50%;background:{{ th.pageFlat }};border:1px solid {{ nd.ring }};display:flex;align-items:center;justify-content:center"><span style="display:block;background:url('{{ nd.gl }}') center/contain no-repeat;width:20px;height:20px"></span></span>
+                  <span style="font:400 14px/1.15 'EB Garamond',serif;text-align:center;text-shadow:0 0 6px #000">{{ nd.title }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ art.rel }}" as="rl" hint-placeholder-count="0">
+                <button onClick="{{ rl.onClick }}" onMouseEnter="{{ rl.enter }}" onMouseLeave="{{ unpeek }}" style="display:flex;align-items:center;gap:14px;background:transparent;border:0;border-bottom:1px solid {{ th.line }};cursor:pointer;padding:11px 2px;text-align:left;color:{{ th.ink }}" style-hover="background:rgba(255,255,255,.03)">
+                  <span style="display:block;background:url('{{ rl.gl }}') center/contain no-repeat;flex:none;width:18px;height:18px"></span>
+                  <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+                    <span style="font:400 17px 'EB Garamond',serif">{{ rl.title }}</span>
+                    <span style="font:italic 400 13.5px 'EB Garamond',serif;color:{{ th.dim }}">{{ rl.sub }}</span>
+                  </span>
+                  <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:{{ th.dim }}">{{ rl.folio }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabGal }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 16px">
+            <sc-for list="{{ art.gal }}" as="gi" hint-placeholder-count="0">
+              <figure style="margin:0;display:flex;flex-direction:column;gap:8px">
+                <div style="padding:5px;border:1px solid {{ th.line2 }}"><div style="position:relative;height:160px;border:1px solid {{ th.line }};overflow:hidden"><image-slot id="{{ gi.id }}" shape="rect" placeholder="Arrastra una lámina"></image-slot></div></div>
+                <figcaption style="text-align:center;font:italic 400 13.5px 'EB Garamond',serif;color:{{ th.dim }}">{{ gi.cap }}</figcaption>
+              </figure>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:auto;padding-top:18px;color:{{ th.dim }}">
+          <span style="width:28px;height:1px;background:{{ th.line2 }}"></span>
+          <span style="font:400 15px 'Cormorant Garamond',serif;letter-spacing:.12em">{{ art.folioNum }}</span>
+          <span style="width:28px;height:1px;background:{{ th.line2 }}"></span>
+        </div>
+      </div>
+    </article>
+  </sc-if>
+
+  <div style="position:absolute;top:68px;bottom:0;left:{{ gridLeft }};right:0;pointer-events:none">
+    <div style="position:absolute;left:24px;top:56px;bottom:56px;width:1px;background:linear-gradient(180deg,rgba(0,0,0,0),{{ th.line2 }} 12%,{{ th.line2 }} 88%,rgba(0,0,0,0))"></div>
+    <sc-for list="{{ ticks }}" as="tk" hint-placeholder-count="5">
+      <span style="position:absolute;left:21px;top:{{ tk.top }};width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.line2 }};background:#03060d"></span>
+    </sc-for>
+    <div style="position:absolute;left:50%;top:50%;width:min(86%,1100px);aspect-ratio:1.55/1;transform:translate(-50%,-50%);border:1px solid rgba(200,210,225,.06);border-radius:50%"></div>
+    <div style="position:absolute;left:50%;top:50%;width:min(56%,720px);aspect-ratio:1.55/1;transform:translate(-50%,-50%);border:1px solid rgba(200,210,225,.05);border-radius:50%"></div>
+  </div>
+
+  <div style="position:absolute;right:24px;top:{{ modeTop }};display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+    <div style="display:flex;background:{{ th.solid }};border:1px solid {{ th.line2 }};border-radius:4px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.4)">
+      <sc-for list="{{ mapBtns }}" as="b" hint-placeholder-count="3">
+        <button onClick="{{ b.onClick }}" style="background:{{ b.bg }};border:0;border-left:1px solid {{ th.line }};outline:1px solid {{ b.ol }};outline-offset:-1px;cursor:pointer;padding:13px 22px;font:500 10.5px 'EB Garamond',serif;letter-spacing:.18em;text-transform:uppercase;color:{{ b.col }};white-space:nowrap" style-hover="color:#fff">{{ b.label }}</button>
+      </sc-for>
+    </div>
+    <sc-if value="{{ inSys }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-shadow:0 0 10px #000">
+        <span style="font:500 26px 'Cormorant Garamond',serif;color:{{ th.ink }}">{{ sysName }}</span>
+        <span style="font:italic 400 15px 'EB Garamond',serif;color:{{ th.dim }}">{{ sysMeta }}</span>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ showRollo }}" hint-placeholder-val="{{ false }}">
+    <section style="position:absolute;left:{{ rolloLeft }};right:90px;bottom:22px;display:flex;flex-direction:column;background:{{ th.panel }};border:1px solid {{ th.line2 }};backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="position:absolute;left:-1px;right:-1px;top:-4px;height:7px;border:1px solid {{ th.line2 }};border-bottom:0;pointer-events:none"></div>
+      <div style="position:absolute;left:-1px;right:-1px;bottom:-4px;height:7px;border:1px solid {{ th.line2 }};border-top:0;pointer-events:none"></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 18px 10px;border-bottom:1px solid {{ th.line }}">
+        <span style="width:7px;height:7px;transform:rotate(45deg);border:1px solid {{ th.accent }}"></span>
+        <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.3em;color:{{ th.ink }};white-space:nowrap">ROLLO DE LAS ERAS</span>
+        <span style="font:italic 400 14px 'EB Garamond',serif;color:{{ th.dim }};white-space:nowrap">Calendario DCT</span>
+        <button onClick="{{ closeRollo }}" title="Enrollar" style="margin-left:auto;width:26px;height:26px;background:transparent;border:1px solid {{ th.line }};color:{{ th.dim }};cursor:pointer;font:300 18px/1 'EB Garamond',serif" style-hover="color:#fff;border-color:#fff">×</button>
+      </div>
+      <div style="display:flex;overflow-x:auto;padding:14px 8px 16px">
+        <sc-for list="{{ eras }}" as="er" hint-placeholder-count="4">
+          <div style="flex:none;display:flex;flex-direction:column;gap:10px;padding:0 16px;border-right:1px solid {{ th.line }};min-width:150px">
+            <button onClick="{{ er.toggle }}" style="display:flex;align-items:baseline;gap:10px;background:transparent;border:0;cursor:pointer;padding:0;text-align:left;color:{{ er.col }}" style-hover="color:#fff">
+              <span style="font:500 15px 'Cormorant Garamond',serif;color:{{ th.accent }}">{{ er.num }}</span>
+              <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap">{{ er.name }}</span>
+              <span style="font:400 11px 'EB Garamond',serif;color:{{ th.dim }}">{{ er.chev }}</span>
+            </button>
+            <sc-if value="{{ er.open }}" hint-placeholder-val="{{ true }}">
+              <div style="position:relative;display:flex;gap:18px">
+                <span style="position:absolute;left:0;right:0;top:4px;height:1px;background:{{ th.line2 }}"></span>
+                <sc-for list="{{ er.ev }}" as="ev" hint-placeholder-count="2">
+                  <button onClick="{{ ev.onClick }}" onMouseEnter="{{ ev.enter }}" onMouseLeave="{{ unpeek }}" style="position:relative;flex:none;width:132px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;background:transparent;border:0;cursor:pointer;padding:0;text-align:left;color:{{ th.ink }}" style-hover="color:#fff">
+                    <span style="width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ ev.dot }};background:{{ ev.fill }}"></span>
+                    <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:{{ ev.dc }};margin-top:3px">{{ ev.date }}</span>
+                    <span style="font:400 15px/1.2 'EB Garamond',serif;color:{{ ev.tc }};text-wrap:pretty">{{ ev.title }}</span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{ er.empty }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:7px;padding-top:16px;width:140px">
+                    <span style="display:block;height:9px;width:90%;background:repeating-linear-gradient(90deg,{{ th.bar }} 0 3px,#0c121e 3px 4px)"></span>
+                    <span style="display:block;height:9px;width:60%;background:repeating-linear-gradient(90deg,{{ th.bar }} 0 3px,#0c121e 3px 4px)"></span>
+                    <span style="font:italic 400 13px 'EB Garamond',serif;color:{{ th.dim }}">Sin registros</span>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ er.closed }}" hint-placeholder-val="{{ false }}">
+              <span style="font:italic 400 13.5px 'EB Garamond',serif;color:{{ th.dim }}">{{ er.count }}</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ showTourBtn }}" hint-placeholder-val="{{ false }}">
+    <button onClick="{{ startTour }}" style="white-space:nowrap;flex:none;position:absolute;left:260px;bottom:56px;display:flex;align-items:center;gap:10px;height:38px;padding:0 16px;background:{{ th.solid }};border:1px solid {{ th.line2 }};color:{{ th.ink }};cursor:pointer;font:500 11px 'EB Garamond',serif;letter-spacing:.22em" style-hover="border-color:#fff">
+      <span style="width:0;height:0;border-left:7px solid {{ th.accent }};border-top:4.5px solid transparent;border-bottom:4.5px solid transparent"></span>RECORRIDO GUIADO
+    </button>
+  </sc-if>
+
+  <sc-if value="{{ showIntro }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:232px;right:0;top:68px;bottom:0;display:flex;align-items:center;justify-content:center;padding:24px 90px 24px 24px;background:radial-gradient(ellipse at 50% 50%,rgba(3,6,13,.55) 0%,rgba(3,6,13,.15) 70%);pointer-events:none">
+      <div style="pointer-events:auto;position:relative;width:min(720px,100%);max-height:100%;overflow-y:auto;background:{{ th.panel }};border:1px solid {{ th.line2 }};backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 40px 120px rgba(0,0,0,.6);padding:44px clamp(24px,4vw,56px) 40px;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center">
+        <div style="position:absolute;inset:6px;border:1px solid {{ th.line }};pointer-events:none"></div>
+        <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.34em;color:{{ th.accent }}">CÓDICE DE ITHIRION</span>
+        <h1 style="margin:0;font:500 clamp(34px,3.6vw,50px)/1.05 'Cormorant Garamond',serif;letter-spacing:.02em;text-wrap:balance">Una galaxia antigua, herida en el noroeste.</h1>
+        <p style="margin:0;max-width:46ch;font:400 17.5px/1.6 'EB Garamond',serif;color:{{ th.body }};text-wrap:pretty">Este códice reúne lo que se sabe de Ithirion: sus especies, sus imperios y la anomalía que nadie termina de entender. Puedes recorrerlo de la mano del cronista o abrir sus folios a tu ritmo.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          <button onClick="{{ startTour }}" style="white-space:nowrap;flex:none;height:46px;padding:0 26px;background:{{ th.hl }};border:1px solid {{ th.soft }};color:{{ th.ink }};cursor:pointer;font:500 11.5px 'EB Garamond',serif;letter-spacing:.24em" style-hover="border-color:#fff">COMENZAR EL RECORRIDO</button>
+          <button onClick="{{ dismissIntro }}" style="white-space:nowrap;flex:none;height:46px;padding:0 26px;background:transparent;border:1px solid {{ th.line2 }};color:{{ th.dim }};cursor:pointer;font:500 11.5px 'EB Garamond',serif;letter-spacing:.24em" style-hover="color:#fff;border-color:#fff">EXPLORAR POR MI CUENTA</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;width:100%;margin-top:10px">
+          <span style="flex:1;height:1px;background:{{ th.line }}"></span>
+          <span style="font:500 10px 'EB Garamond',serif;letter-spacing:.3em;color:{{ th.dim }}">FOLIOS DESTACADOS</span>
+          <span style="flex:1;height:1px;background:{{ th.line }}"></span>
+        </div>
+        <div style="width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+          <sc-for list="{{ featured }}" as="ft" hint-placeholder-count="4">
+            <button onClick="{{ ft.onClick }}" onMouseEnter="{{ ft.enter }}" onMouseLeave="{{ unpeek }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:16px 14px 18px;background:transparent;border:1px solid {{ th.line }};cursor:pointer;text-align:left;color:{{ th.ink }}" style-hover="border-color:{{ th.soft }};background:{{ th.hl }}">
+              <span style="display:block;width:26px;height:26px;background:url('{{ ft.gl }}') center/contain no-repeat"></span>
+              <span style="font:500 10px 'EB Garamond',serif;letter-spacing:.2em;text-transform:uppercase;color:{{ th.dim }}">{{ ft.kind }}</span>
+              <span style="font:500 21px/1.1 'Cormorant Garamond',serif">{{ ft.title }}</span>
+              <span style="font:italic 400 14px/1.35 'EB Garamond',serif;color:{{ th.body }};text-wrap:pretty">{{ ft.hook }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showTour }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:256px;right:90px;bottom:28px;display:flex;justify-content:center;pointer-events:none">
+      <div id="cent-tour" style="pointer-events:auto;position:relative;width:min(600px,100%);background:{{ th.panel }};border:1px solid {{ th.line2 }};backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 24px 70px rgba(0,0,0,.55);padding:20px 26px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="position:absolute;inset:5px;border:1px solid {{ th.line }};pointer-events:none"></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font:500 10px 'EB Garamond',serif;letter-spacing:.3em;color:{{ th.accent }}">RECORRIDO</span>
+          <div style="display:flex;gap:7px">
+            <sc-for list="{{ tourDots }}" as="td" hint-placeholder-count="6">
+              <button onClick="{{ td.onClick }}" title="{{ td.name }}" style="width:7px;height:7px;padding:0;transform:rotate(45deg);border:1px solid {{ td.bd }};background:{{ td.bg }};cursor:pointer"></button>
+            </sc-for>
+          </div>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:{{ th.dim }};white-space:nowrap">{{ tour.count }}</span>
+          <button onClick="{{ endTour }}" title="Salir del recorrido" style="margin-left:auto;width:26px;height:26px;background:transparent;border:1px solid {{ th.line }};color:{{ th.dim }};cursor:pointer;font:300 18px/1 'EB Garamond',serif" style-hover="color:#fff;border-color:#fff">×</button>
+        </div>
+        <h3 style="margin:0;font:500 30px/1.05 'Cormorant Garamond',serif;letter-spacing:.02em">{{ tour.title }}</h3>
+        <p style="margin:0;font:400 17px/1.58 'EB Garamond',serif;color:{{ th.body }};text-wrap:pretty">{{ tour.text }}</p>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <sc-if value="{{ tour.hasPrev }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ tourPrev }}" style="white-space:nowrap;flex:none;height:38px;padding:0 14px;background:transparent;border:1px solid {{ th.line }};color:{{ th.dim }};cursor:pointer;font:500 11px 'EB Garamond',serif;letter-spacing:.2em" style-hover="color:#fff;border-color:#fff">‹ ANTERIOR</button>
+          </sc-if>
+          <button onClick="{{ tourRead }}" style="white-space:nowrap;flex:none;height:38px;padding:0 14px;background:transparent;border:1px solid {{ th.line2 }};color:{{ th.ink }};cursor:pointer;font:500 11px 'EB Garamond',serif;letter-spacing:.2em" style-hover="border-color:#fff">LEER EL FOLIO</button>
+          <sc-if value="{{ tour.isLast }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ tourNarr }}" style="white-space:nowrap;flex:none;height:38px;padding:0 14px;background:rgba(232,99,75,.10);border:1px solid rgba(232,99,75,.55);color:#f4ddd4;cursor:pointer;font:500 11px 'EB Garamond',serif;letter-spacing:.2em" style-hover="border-color:#fff">ABRIR EL NARRADOR</button>
+          </sc-if>
+          <button onClick="{{ tourNext }}" style="white-space:nowrap;flex:none;margin-left:auto;height:38px;padding:0 18px;background:{{ th.hl }};border:1px solid {{ th.soft }};color:{{ th.ink }};cursor:pointer;font:500 11px 'EB Garamond',serif;letter-spacing:.2em" style-hover="border-color:#fff">{{ tour.nextLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showHint }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;left:calc(232px + 28px);bottom:24px;font:italic 400 15px 'EB Garamond',serif;color:{{ th.dim }};text-shadow:0 0 8px #000;pointer-events:none">Arrastra para girar · rueda para acercar · pulsa una estrella o una región</div>
+  </sc-if>
+
+  <div style="position:absolute;right:24px;bottom:24px;display:flex;flex-direction:column;background:{{ th.solid }};border:1px solid {{ th.line2 }};border-radius:4px;overflow:hidden">
+    <button onClick="{{ zoomIn }}" title="Acercar" style="width:42px;height:42px;background:transparent;border:0;border-bottom:1px solid {{ th.line }};color:{{ th.ink }};cursor:pointer;font:300 24px/1 'EB Garamond',serif" style-hover="background:rgba(255,255,255,.05)">+</button>
+    <button onClick="{{ zoomOut }}" title="Alejar" style="width:42px;height:42px;background:transparent;border:0;border-bottom:1px solid {{ th.line }};color:{{ th.ink }};cursor:pointer;font:300 24px/1 'EB Garamond',serif" style-hover="background:rgba(255,255,255,.05)">−</button>
+    <button onClick="{{ recenter }}" title="Centrar" style="width:42px;height:42px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(255,255,255,.05)">
+      <span style="position:relative;width:18px;height:18px;border:1px solid {{ th.ink }};border-radius:50%;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:{{ th.ink }}"></span></span>
+    </button>
+  </div>
+
+  <sc-if value="{{ showIndex }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ toggleIndex }}" style="position:absolute;left:0;right:0;top:68px;bottom:0;background:rgba(2,4,9,.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;justify-content:center;padding:28px 20px">
+      <div id="cent-index" onClick="{{ stop }}" style="position:relative;width:min(1040px,100%);height:100%;background:{{ th.page }};border:1px solid {{ th.line }};box-shadow:0 40px 120px rgba(0,0,0,.7)">
+        <div style="position:absolute;inset:12px;border:1px solid {{ th.line2 }};pointer-events:none"></div>
+        <div style="position:absolute;inset:16px;border:1px solid {{ th.line }};pointer-events:none"></div>
+        <span style="position:absolute;left:8px;top:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+        <span style="position:absolute;right:8px;top:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+        <span style="position:absolute;left:8px;bottom:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+        <span style="position:absolute;right:8px;bottom:8px;width:9px;height:9px;transform:rotate(45deg);border:1px solid {{ th.soft }};background:{{ th.pageFlat }}"></span>
+        <button onClick="{{ toggleIndex }}" title="Cerrar" style="position:absolute;right:30px;top:30px;z-index:2;width:30px;height:30px;background:transparent;border:1px solid {{ th.line }};color:{{ th.dim }};cursor:pointer;font:300 20px/1 'EB Garamond',serif" style-hover="color:#fff;border-color:#fff">×</button>
+        <div style="position:absolute;inset:17px;overflow-y:auto;padding:40px clamp(24px,4vw,56px) 48px;display:flex;flex-direction:column;gap:34px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+            <span style="font:500 10.5px 'EB Garamond',serif;letter-spacing:.34em;color:{{ th.accent }}">ÍNDICE</span>
+            <h2 style="margin:0;font:500 clamp(36px,4vw,54px)/1 'Cormorant Garamond',serif;letter-spacing:.04em">Códice de Ithirion</h2>
+            <span style="font:italic 400 16px 'EB Garamond',serif;color:{{ th.dim }}">{{ idxNote }}</span>
+            <div style="display:flex;align-items:center;gap:10px;width:min(320px,70%);margin-top:6px">
+              <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,0,0,0),{{ th.line2 }})"></span>
+              <span style="width:5px;height:5px;transform:rotate(45deg);border:1px solid {{ th.soft }}"></span>
+              <span style="flex:1;height:1px;background:linear-gradient(90deg,{{ th.line2 }},rgba(0,0,0,0))"></span>
+            </div>
+          </div>
+          <div style="column-width:260px;column-gap:52px">
+            <sc-for list="{{ idx }}" as="ix" hint-placeholder-count="6">
+              <div style="break-inside:avoid;display:flex;flex-direction:column;padding-bottom:30px">
+                <div style="display:flex;align-items:baseline;gap:12px;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid {{ th.line2 }}">
+                  <span style="font:500 24px 'Cormorant Garamond',serif;color:{{ th.accent }}">{{ ix.num }}</span>
+                  <span style="font:500 11px 'EB Garamond',serif;letter-spacing:.26em;text-transform:uppercase">{{ ix.name }}</span>
+                </div>
+                <sc-for list="{{ ix.items }}" as="it" hint-placeholder-count="4">
+                  <button onClick="{{ it.onClick }}" style="display:flex;align-items:baseline;gap:8px;background:transparent;border:0;cursor:pointer;padding:6px 0;text-align:left;color:{{ it.tc }}" style-hover="color:#fff">
+                    <span style="font:400 16px 'EB Garamond',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%">{{ it.title }}</span>
+                    <span style="flex:1;border-bottom:1px dotted {{ th.line2 }};transform:translateY(-4px)"></span>
+                    <span style="font:400 11px 'IBM Plex Mono',monospace;color:{{ th.dim }}">{{ it.folio }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;pageTurn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Códice&quot;},&quot;liveLinks&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Códice&quot;}}">
+class Component extends DCLogic {
+  state = {
+    SEC: [], ENT: [], narr: false, tab: 'mapa', og: { cosmologia: true },
+    view: null, cur: null, mcard: null, hist: [], hi: -1, q: '', artTab: 'desc',
+    sys: { sys: false, name: '', meta: '', planets: [] }, psel: -1,
+    polit: false, orb: true, lab: true, pause: false, index: false, eraClosed: {}, tour: -1, intro: false, read: {}
+  };
+  mute = 0;
+  gcache = {};
+  componentDidMount() {
+    this.onMsg = e => this.handle(e.data);
+    window.addEventListener('message', this.onMsg);
+    this.onKey = e => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); const s = document.getElementById('cent-search'); if (s) s.focus(); }
+      if (e.key === 'Escape') { if (this.state.tour >= 0 && !this.state.view) this.endTour(); else if (this.state.q) this.setState({ q: '' }); else if (this.state.index) this.setState({ index: false }); else if (this.state.view) this.closeArt(); }
+    };
+    window.addEventListener('keydown', this.onKey);
+    try { this.setState({ intro: !localStorage.getItem('centinela-intro-v1'), read: JSON.parse(localStorage.getItem('centinela-leidos') || '{}') }); } catch (e) { this.setState({ intro: true }); }
+    this.onRs = () => this.setState({ w: window.innerWidth });
+    window.addEventListener('resize', this.onRs); this.onRs();
+    const f = document.getElementById('cent-map');
+    if (f) f.addEventListener('load', () => { this.lastInset = null; setTimeout(() => this.syncInset(), 300); });
+    setTimeout(() => { this.lastInset = null; this.syncInset(); }, 1500);
+    import(new URL('wiki-datos.js', location.href).href).then(m => {
+      const by = {}; m.ENTRADAS.forEach(x => by[x.id] = x);
+      const pri = { lugares: 0, facciones: 1, cosmologia: 2, especies: 3 };
+      const mk = {};
+      m.ENTRADAS.forEach(x => { if (!x.map) return; const k = x.map.t + ':' + x.map.id; const p = pri[x.s] ?? 9;
+        if (!mk[k] || p < (pri[mk[k].s] ?? 9)) mk[k] = x; });
+      const folio = {}; let n = 1;
+      m.SECCIONES.forEach(s => m.ENTRADAS.filter(x => x.s === s.id).forEach(x => { folio[x.id] = n++; }));
+      this.by = by; this.mk = mk; this.folio = folio;
+      this.setState({ SEC: m.SECCIONES, ENT: m.ENTRADAS });
+    });
+  }
+  syncInset() {
+    requestAnimationFrame(() => {
+      const c = this.cm(); if (!c || !c.setInset) return;
+      const a = document.querySelector('article'), s = document.getElementById('cent-side');
+      const v = Math.round(a ? a.getBoundingClientRect().right : (s ? s.getBoundingClientRect().right : 0));
+      if (v !== this.lastInset) { this.lastInset = v; c.setInset(v); }
+    });
+  }
+  componentDidUpdate() {
+    this.syncInset();
+    const S = this.state, pg = document.getElementById('cent-page');
+    const pageKey = S.view + ':' + S.cur + ':' + (S.view === 'map' && S.mcard ? S.mcard.title : '');
+    const tabKey = pageKey + ':' + S.artTab;
+    if (pg && pg.animate && this.props.pageTurn !== false) {
+      if (pageKey !== this.lastPage) {
+        pg.scrollTop = 0;
+        pg.animate([{ opacity: 0, transform: 'perspective(1800px) rotateY(-9deg) translateX(-22px)', filter: 'blur(1.5px)' }, { opacity: 1, transform: 'none', filter: 'none' }], { duration: 560, easing: 'cubic-bezier(.2,.7,.2,1)' });
+      } else if (tabKey !== this.lastTab) {
+        pg.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' });
+      }
+    }
+    this.lastPage = pg ? pageKey : null; this.lastTab = tabKey;
+    if (S.narr !== this.lastNarr) {
+      if (S.narr && this.lastNarr !== undefined) document.querySelectorAll('[data-burn="1"]').forEach((el, i) => el.animate && el.animate(
+        [{ opacity: 0, filter: 'blur(6px)', textShadow: '0 0 18px rgba(232,99,75,.9)' }, { opacity: 1, filter: 'blur(0px)', textShadow: '0 0 0 rgba(232,99,75,0)' }],
+        { duration: 1000, delay: i * 140, easing: 'ease-out', fill: 'backwards' }));
+      this.lastNarr = S.narr;
+    }
+  }
+  componentWillUnmount() { window.removeEventListener('message', this.onMsg); window.removeEventListener('resize', this.onRs); window.removeEventListener('keydown', this.onKey); }
+  cm() { const f = document.getElementById('cent-map'); try { return f && f.contentWindow && f.contentWindow.__cm; } catch (e) { return null; } }
+  vis(x) { return x && (this.state.narr || !x.n); }
+  peek(e) {
+    const c = this.cm(); if (!c || !c.peek || this.state.sys.sys) return;
+    if (!e || !e.map) { c.peek(null); return; }
+    c.peek(e.map.t, e.map.id);
+  }
+  handle(d) {
+    if (!d || !d.cent) return;
+    if (d.type === 'mode') { this.setState({ sys: d, psel: -1, view: d.sys ? null : (this.state.view === 'map' ? null : this.state.view) }); return; }
+    if (d.type === 'close') { if (this.state.view === 'map') this.setState({ view: null }); return; }
+    if (d.type === 'card') {
+      if (performance.now() < this.mute) return;
+      const sl = d.sel;
+      if (sl && sl.t === 'p') { this.setState({ view: 'map', mcard: d, psel: sl.id }); return; }
+      const e = sl && this.mk && this.mk[sl.t + ':' + sl.id];
+      if (e && this.vis(e)) this.open(e.id, true);
+      else this.setState({ view: 'map', mcard: d });
+    }
+  }
+  open(id, noFly) {
+    const e = this.by && this.by[id]; if (!this.vis(e)) return;
+    const { hist, hi, og } = this.state;
+    const h = hist.slice(0, hi + 1); if (h[h.length - 1] !== id) h.push(id);
+    const read = Object.assign({}, this.state.read, { [id]: true });
+    try { localStorage.setItem('centinela-leidos', JSON.stringify(read)); } catch (er) {}
+    if (this.state.intro) this.dismissIntro();
+    this.setState({ view: 'entry', cur: id, hist: h, hi: h.length - 1, q: '', artTab: 'desc', index: false, read, og: Object.assign({}, og, { [e.s]: true }) });
+    this.peek(null);
+    if (!noFly) this.fly(e);
+  }
+  fly(e) {
+    const c = this.cm(); if (!c || !e.map || this.state.sys.sys) return;
+    this.mute = performance.now() + 700;
+    if (e.map.t === 's') c.selNamed(e.map.id, true);
+    else { if (!this.state.polit) this.setState({ polit: c.btn('bPol') === 'true' }); c.selReg(e.map.id, true); }
+  }
+  openSys(id) {
+    const c = this.cm(); if (!c || this.state.sys.sys) return;
+    this.mute = performance.now() + 700; c.selNamed(id, false); c.act();
+  }
+  go(d) {
+    const { hist, hi } = this.state; const n = hi + d; if (n < 0 || n >= hist.length) return;
+    const e = this.by[hist[n]]; if (!this.vis(e)) return;
+    this.setState({ hi: n, cur: hist[n], view: 'entry', artTab: 'desc' }); this.fly(e);
+  }
+  dismissIntro() { try { localStorage.setItem('centinela-intro-v1', '1'); } catch (e) {} this.setState({ intro: false }); }
+  tourGo(i) {
+    const ST = this.STOPS;
+    if (i < 0 || i >= ST.length) { this.endTour(); return; }
+    if (this.state.intro) this.dismissIntro();
+    const st = ST[i], c = this.cm();
+    this.setState({ tour: i, view: null, tab: 'mapa', index: false });
+    if (!c) return;
+    if (st.home) { c.clearSel(); this.tb('bHome'); return; }
+    const e = this.by && this.by[st.e]; if (e) this.fly(e);
+  }
+  endTour() { this.setState({ tour: -1 }); }
+  STOPS = [
+    { home: true, e: 'ithirion', title: 'Ithirion', text: 'Esto es Ithirion, una galaxia antigua. Seis especies tricias la habitan y comparten un mismo calendario, el DCT, que cuenta los años desde la caída de los Zarakmir.' },
+    { e: 'atharos', title: 'Atharos', text: 'Entre cordilleras oscuras se alza Shneridan, capital del Imperio Athari, la fuerza dominante. Desde aquí gobierna Lyptho Drath-Gathin, el emperador al que teme toda la galaxia.' },
+    { e: 'detrica', title: 'Détrica', text: 'Capital del Imperio Daericio, donde las casas nobles pesan más que el propio emperador. Aquí transcurre el asedio que cambia el rumbo de la galaxia.' },
+    { e: 'tierra', title: 'La Tierra', text: 'Un mundo frío e industrializado en los márgenes del tablero. Cuando se descubrió a los humanos, su hallazgo se vivió como un acontecimiento religioso: encajaban en el patrón tricio.' },
+    { e: 'vorgoth', title: 'La frontera vorgoth', text: 'En el límite del Imperio Athari arde una guerra perpetua contra hordas de autómatas antiguos. El Clan Aneloth sostiene el frente desde hace más de diez mil años.' },
+    { e: 'brecha', title: 'La Brecha', text: 'En el noroeste se abre una anomalía que la galaxia considera inofensiva. Emite engendros cada vez más a menudo, y los mundos cercanos cambian. Este códice calla más de lo que cuenta.' }
+  ];
+  closeArt() {
+    const c = this.cm(), S = this.state;
+    if (c) { if (S.sys.sys && S.view === 'map') c.unfocusPlanet(); else if (!S.sys.sys) c.clearSel(); }
+    this.setState({ view: null });
+  }
+  toggleNarr() {
+    const v = !this.state.narr; const c = this.cm(); if (c) c.setNarr(v);
+    const st = { narr: v };
+    if (!v && this.state.view === 'entry' && this.by[this.state.cur] && this.by[this.state.cur].n) st.view = null;
+    this.setState(st);
+  }
+  tb(id, key) { const c = this.cm(); if (!c) return; const r = c.btn(id); if (key) this.setState({ [key]: r === 'true' }); }
+  showGroup(sec) {
+    this.setState(s => ({ tab: sec, og: Object.assign({}, s.og, { [sec]: true }) }), () => {
+      const side = document.getElementById('cent-side'), g = document.getElementById('grp-' + sec);
+      if (side && g) side.scrollTo({ top: g.offsetTop - 8, behavior: 'smooth' });
+    });
+  }
+  hash(s) { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); }
+  roman(n) { return ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n] || String(n); }
+  glyph(id, sec, col, mini) {
+    const key = id + '|' + sec + '|' + col + '|' + (mini ? 1 : 0);
+    if (this.gcache[key]) return this.gcache[key];
+    let h = this.hash(id) || 1; const rnd = () => { h = (h * 16807) % 2147483647; return h / 2147483647; };
+    const sw = mini ? 5 : 2, f = v => v.toFixed(1);
+    const poly = (n, r, rot) => { const p = []; for (let i = 0; i < n; i++) { const a = rot + i * Math.PI * 2 / n; p.push(f(50 + r * Math.cos(a)) + ',' + f(50 + r * Math.sin(a))); } return '<polygon points="' + p.join(' ') + '"/>'; };
+    const circ = r => '<circle cx="50" cy="50" r="' + r + '"/>';
+    const up = -Math.PI / 2; let s = '';
+    if (sec === 'cosmologia') s += circ(42) + (mini ? '' : circ(36));
+    else if (sec === 'especies') s += poly(6, 44, up);
+    else if (sec === 'personajes') s += poly(4, 46, up);
+    else if (sec === 'facciones') s += '<path d="M50 6 L88 18 L84 56 Q78 80 50 95 Q22 80 16 56 L12 18Z"/>';
+    else if (sec === 'poderes') s += poly(3, 48, up) + (mini ? '' : poly(3, 26, Math.PI / 2));
+    else if (sec === 'lugares') s += circ(42) + '<path d="M50 8V92M8 50H92"/>';
+    else if (sec === 'cronologia') s += '<path d="M24 10H76L50 50L76 90H24L50 50Z"/>';
+    else s += '<rect x="12" y="12" width="76" height="76"/>';
+    if (!mini) {
+      const k = [0, 4, 6, 8, 12][Math.floor(rnd() * 5)], r0 = 14 + rnd() * 6, inner = Math.floor(rnd() * 4);
+      if (inner === 0) s += circ(f(r0));
+      else if (inner === 1) s += poly(4, r0 + 2, up);
+      else if (inner === 2) s += poly(3 + Math.floor(rnd() * 4), r0 + 2, up + rnd() * .6);
+      else s += circ(f(r0)) + circ(f(r0 * .45));
+      for (let i = 0; i < k; i++) { const a = up + i * Math.PI * 2 / k; s += '<path d="M' + f(50 + (r0 + 4) * Math.cos(a)) + ' ' + f(50 + (r0 + 4) * Math.sin(a)) + 'L' + f(50 + (r0 + 12) * Math.cos(a)) + ' ' + f(50 + (r0 + 12) * Math.sin(a)) + '"/>'; }
+      s += '<circle cx="50" cy="50" r="2.4" fill="' + col + '"/>';
+    }
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="' + col + '" stroke-width="' + sw + '" stroke-linejoin="round">' + s + '</svg>';
+    return (this.gcache[key] = 'data:image/svg+xml,' + encodeURIComponent(svg));
+  }
+  linker(curId) {
+    const narr = this.state.narr, list = [];
+    this.state.ENT.forEach(x => {
+      if (!this.vis(x) || x.id === curId || x.s === 'cronologia' || x.s === 'saga') return;
+      const names = new Set([x.t]); if (narr && x.to) names.add(x.to); if (!narr && x.to) names.delete(x.to);
+      [...names].forEach(nm => { const m = nm.match(/^(Los|Las|El|La)\s+(.+)$/); if (m) names.add(m[2]); });
+      names.forEach(nm => { if (nm.length >= 4) list.push({ nm, id: x.id }); });
+    });
+    list.sort((a, b) => b.nm.length - a.nm.length);
+    const map = {}; list.forEach(l => { const k = l.nm.toLowerCase(); if (!map[k]) map[k] = l.id; });
+    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let re = null;
+    try { re = list.length ? new RegExp('(?<![\\p{L}\\p{N}])(' + list.map(l => esc(l.nm)).join('|') + ')(?![\\p{L}\\p{N}])', 'giu') : null; } catch (e) { re = null; }
+    return { re, map, used: new Set() };
+  }
+  segs(text, L) {
+    const out = []; const live = this.props.liveLinks !== false;
+    if (!L.re || !live) return [{ t: text, tx: true, lk: false }];
+    let last = 0, m; L.re.lastIndex = 0;
+    while ((m = L.re.exec(text))) {
+      const id = L.map[m[0].toLowerCase()];
+      if (!id || L.used.has(id)) continue;
+      L.used.add(id);
+      if (m.index > last) out.push({ t: text.slice(last, m.index), tx: true, lk: false });
+      const e = this.by[id];
+      out.push({ t: m[0], tx: false, lk: true, onClick: () => this.open(id), enter: () => this.peek(e) });
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) out.push({ t: text.slice(last), tx: true, lk: false });
+    return out;
+  }
+  renderVals() {
+    const S = this.state, narr = S.narr, ENT = S.ENT, W = S.w || window.innerWidth;
+    const th = narr
+      ? { accent: '#e8634b', ink: '#f4ddd4', dim: '#b98d82', line: 'rgba(232,99,75,.2)', soft: 'rgba(232,99,75,.55)', panel: 'rgba(16,6,6,.94)', side: 'rgba(12,5,5,.97)', solid: '#110707', line2: 'rgba(232,99,75,.32)', body: '#d2b0a7', hl: 'rgba(232,99,75,.10)', page: 'linear-gradient(180deg,#170909 0%,#0d0505 100%)', pageFlat: '#110707', bar: '#2c1411' }
+      : { accent: '#c5cdd9', ink: '#e6e9ef', dim: '#8a93a2', line: 'rgba(190,202,220,.12)', soft: 'rgba(197,205,217,.42)', panel: 'rgba(7,11,22,.95)', side: 'rgba(6,10,20,.97)', solid: '#070c18', line2: 'rgba(190,202,220,.22)', body: '#b6bdc9', hl: 'rgba(197,205,217,.07)', page: 'linear-gradient(180deg,#0b1426 0%,#070c18 100%)', pageFlat: '#0a1121', bar: '#1a2232' };
+    const T = x => narr && x.to ? x.to : x.t, K = x => narr && x.ko ? x.ko : x.k;
+    const secName = {}, secIdx = {}; S.SEC.forEach((s, i) => { secName[s.id] = s.name; secIdx[s.id] = i + 1; });
+    const fol = id => this.folio ? 'f. ' + this.folio[id] : '';
+    const curE = S.view === 'entry' && this.by ? this.by[S.cur] : null;
+    const activeTab = S.view === 'entry' && curE ? curE.s : S.tab;
+    const TOP = [['cosmologia', 'Universo'], ['mapa', 'Mapa'], ['especies', 'Especies'], ['lugares', 'Lugares'], ['personajes', 'Personajes'], ['cronologia', 'Cronología']];
+    const topTabs = TOP.map(([id, name]) => {
+      const on = id === 'mapa' ? (!S.view && S.tab === 'mapa') : (id === 'cronologia' ? S.tab === 'cronologia' : activeTab === id);
+      return { name, on, col: on ? th.ink : th.dim, onClick: () => {
+        if (id === 'mapa') { this.closeArt(); this.setState({ tab: 'mapa' }); return; }
+        this.showGroup(id); if (id === 'cosmologia') this.open('ithirion');
+      } };
+    });
+    const groups = S.SEC.map(sec => {
+      const open = !!S.og[sec.id];
+      const items = ENT.filter(x => x.s === sec.id && this.vis(x)).map(x => {
+        const on = S.view === 'entry' && S.cur === x.id, red = x.n && narr;
+        return { title: T(x), folio: this.folio ? this.folio[x.id] : '',
+          gl: this.glyph(x.id, x.s, on ? th.accent : (red ? '#e8634b' : th.dim), true),
+          bg: on ? 'linear-gradient(90deg,' + th.hl + ',rgba(0,0,0,0))' : 'transparent', edge: on ? th.accent : 'transparent',
+          tc: on ? '#fff' : th.ink, fc: on ? th.accent : th.dim,
+          onClick: () => this.open(x.id), enter: () => this.peek(x) };
+      });
+      return { name: sec.name, num: this.roman(secIdx[sec.id]), domId: 'grp-' + sec.id, open, chev: open ? '˄' : '˅', items,
+        toggle: () => this.setState(s => ({ og: Object.assign({}, s.og, { [sec.id]: !s.og[sec.id] }) })) };
+    });
+    const q = S.q.trim().toLowerCase();
+    const results = q.length < 2 ? [] : ENT.filter(x => this.vis(x) && (T(x) + ' ' + x.t + ' ' + K(x)).toLowerCase().includes(q)).slice(0, 8)
+      .map(x => ({ title: T(x), sub: (secName[x.s] || '') + ' · ' + K(x), folio: fol(x.id), gl: this.glyph(x.id, x.s, th.accent, true), onClick: () => { this.showGroup(x.s); this.open(x.id); } }));
+
+    const redactOf = (arr, seed) => (arr || []).map((p, pi) => {
+      const n = Math.max(1, Math.round(p.length / 64)), bars = [];
+      for (let i = 0; i < n; i++) { const r = this.hash(seed + pi + ':' + i) % 100; bars.push({ w: (i === n - 1 ? 28 + r * .45 : 84 + r * .16).toFixed(0) + '%' }); }
+      return { bars };
+    });
+    let art = null, cons = { edges: [], nodes: [], gl: '', title: '' };
+    if (curE) {
+      const e = curE, L = this.linker(e.id);
+      const fields = [...(e.kv || []).map(f => ({ k: f[0], v: f[1], kc: th.dim })), ...(narr ? (e.kvo || []) : []).map(f => ({ k: f[0], v: f[1], kc: '#e8634b' }))];
+      const pubAll = e.pub || []; let ocAll = narr ? (e.oc || []) : [];
+      let leadTxt = pubAll[0] || '', leadBurn = '0';
+      if (!leadTxt && ocAll.length) { leadTxt = ocAll[0]; ocAll = ocAll.slice(1); leadBurn = '1'; }
+      const leadSegs = leadTxt ? this.segs(leadTxt, L) : [];
+      let cap = '';
+      if (leadSegs.length) { cap = leadSegs[0].t.charAt(0); leadSegs[0] = Object.assign({}, leadSegs[0], { t: leadSegs[0].t.slice(1) }); }
+      const relE = (e.rel || []).map(id => this.by[id]).filter(r => this.vis(r));
+      const rel = relE.map(r => ({ title: T(r), sub: (secName[r.s] || '') + ' · ' + K(r), folio: fol(r.id), gl: this.glyph(r.id, r.s, r.n && narr ? '#e8634b' : th.accent, true), onClick: () => this.open(r.id), enter: () => this.peek(r) }));
+      const unread = relE.filter(r => !S.read[r.id]), pool = unread.length ? unread : relE;
+      const next = pool.slice(0, 3).map(r => ({ title: T(r), why: K(r), gl: this.glyph(r.id, r.s, r.n && narr ? '#e8634b' : th.accent, false), onClick: () => this.open(r.id), enter: () => this.peek(r) }));
+      const N = relE.length, pos = relE.map((r, i) => { const a = -Math.PI / 2 + i * Math.PI * 2 / Math.max(N, 1); return { x: 50 + 36 * Math.cos(a), y: 50 + 37 * Math.sin(a) }; });
+      const edge = (a, b, c) => { const dx = b.x - a.x, dy = b.y - a.y; return { x: a.x.toFixed(2) + '%', y: a.y.toFixed(2) + '%', len: Math.hypot(dx, dy).toFixed(2) + '%', rot: Math.atan2(dy, dx).toFixed(4) + 'rad', c }; };
+      const edges = [];
+      relE.forEach((r, i) => relE.forEach((s2, j) => { if (j > i && ((r.rel || []).includes(s2.id) || (s2.rel || []).includes(r.id))) edges.push(edge(pos[i], pos[j], th.line)); }));
+      relE.forEach((r, i) => edges.push(edge({ x: 50, y: 50 }, pos[i], r.n && narr ? 'rgba(232,99,75,.45)' : th.line2)));
+      cons = { edges, gl: this.glyph(e.id, e.s, th.accent, false), title: T(e),
+        nodes: relE.map((r, i) => ({ x: pos[i].x.toFixed(2) + '%', y: pos[i].y.toFixed(2) + '%', title: T(r), ring: r.n && narr ? 'rgba(232,99,75,.6)' : th.line2, gl: this.glyph(r.id, r.s, r.n && narr ? '#e8634b' : th.accent, false), onClick: () => this.open(r.id), enter: () => this.peek(r) })) };
+      art = { isEntry: true, book: 'LIBRO ' + this.roman(secIdx[e.s]) + ' · ' + (secName[e.s] || '').toUpperCase(), folio: fol(e.id), folioNum: this.folio ? this.folio[e.id] : '',
+        kind: K(e), title: T(e), lema: e.lema || '', hasLema: !!e.lema, hasAlias: narr && !!e.to, alias: e.t,
+        gl: this.glyph(e.id, e.s, th.accent, false),
+        hasLead: !!leadTxt, cap, lead: leadSegs, leadBurn,
+        imgId: 'img-' + e.id, plate: 'Lámina I · ' + T(e),
+        gal: [1, 2, 3, 4].map(i => ({ id: 'gal-' + e.id + '-' + i, cap: 'Lámina ' + this.roman(i + 1) })),
+        fields, hasFields: fields.length > 0,
+        pub: pubAll.slice(1).map(p => ({ segs: this.segs(p, L) })),
+        oc: ocAll.map(p => ({ segs: this.segs(p, L) })), hasOc: ocAll.length > 0,
+        sealed: !narr && (e.oc || []).length > 0, redact: !narr ? redactOf(e.oc, e.id) : [],
+        pending: !pubAll.length && !(narr && (e.oc || []).length), foot: '',
+        hasMap: !!e.map && !S.sys.sys, onMap: () => this.fly(e),
+        hasSys: !!e.sys && !S.sys.sys, sysLabel: 'ABRIR SISTEMA', onSys: () => this.openSys(e.sys),
+        rel, next, hasNext: next.length > 0 };
+    } else if (S.view === 'map' && S.mcard) {
+      const d = S.mcard, L = this.linker(null), oc = narr ? (d.sec || []) : [], pubAll = d.pub || [];
+      const fields = (d.fields || []).map(f => ({ k: f[0], v: f[1], kc: th.dim }));
+      const leadSegs = pubAll[0] ? this.segs(pubAll[0], L) : []; let cap = '';
+      if (leadSegs.length) { cap = leadSegs[0].t.charAt(0); leadSegs[0] = Object.assign({}, leadSegs[0], { t: leadSegs[0].t.slice(1) }); }
+      art = { isEntry: false, book: 'CARTA DEL MAPA', folio: '', folioNum: '', kind: d.kind, title: d.title, lema: '', hasLema: false, hasAlias: false, alias: '',
+        gl: this.glyph(d.title || 'x', 'lugares', th.accent, false), hasLead: !!pubAll[0], cap, lead: leadSegs, leadBurn: '0', imgId: '', plate: '', gal: [],
+        fields, hasFields: fields.length > 0, pub: pubAll.slice(1).map(p => ({ segs: this.segs(p, L) })),
+        oc: oc.map(p => ({ segs: this.segs(p, L) })), hasOc: oc.length > 0, sealed: !narr && (d.sec || []).length > 0, redact: !narr ? redactOf(d.sec, d.title) : [],
+        pending: d.pending, foot: d.foot,
+        hasMap: false, onMap: () => {}, hasSys: !!d.action && !S.sys.sys, sysLabel: (d.action || '').toUpperCase(), onSys: () => { const c = this.cm(); if (c) c.act(); },
+        rel: [], next: [], hasNext: false };
+    }
+    const at = art && art.isEntry ? S.artTab : 'desc';
+    const artTabs = [['desc', 'Texto'], ['rel', 'Constelación'], ['gal', 'Láminas']].map(([id, name]) => ({ name, on: at === id, col: at === id ? th.ink : th.dim, onClick: () => this.setState({ artTab: id }) }));
+
+    const ERAS = [['Eras primordiales', ['cr_vorgoth', 'cr_llegada', 'cr_guerra']], ['Era yndarin', ['cr_dct', 'cr_yndarin', 'cr_tricias']], ['Era de los concilios', ['cr_rebelion', 'cr_ad']], ['Era presente', ['cr_lyptho', 'cr_templo', 'cr_asedio']]];
+    const eras = !this.by ? [] : ERAS.map(([name, ids], i) => {
+      const ev = ids.map(id => this.by[id]).filter(x => this.vis(x)).map(x => {
+        const on = S.view === 'entry' && S.cur === x.id, red = x.n && narr;
+        return { date: x.f || '', title: T(x), tc: on ? '#fff' : th.ink, dc: red ? '#e8634b' : th.dim, dot: red ? '#e8634b' : (on ? '#fff' : th.accent), fill: on ? th.accent : th.pageFlat, onClick: () => this.open(x.id), enter: () => this.peek(x) };
+      });
+      const closed = !!S.eraClosed[i];
+      return { name, num: this.roman(i + 1), ev, open: !closed, closed, empty: !closed && ev.length === 0, chev: closed ? '›' : '‹', col: th.ink,
+        count: ev.length ? ev.length + (ev.length === 1 ? ' suceso' : ' sucesos') : 'Sin registros',
+        toggle: () => this.setState(s => ({ eraClosed: Object.assign({}, s.eraClosed, { [i]: !s.eraClosed[i] }) })) };
+    });
+    const visCount = ENT.filter(x => this.vis(x)).length;
+    const idx = S.SEC.map(sec => ({ num: this.roman(secIdx[sec.id]), name: sec.name,
+      items: ENT.filter(x => x.s === sec.id && this.vis(x)).map(x => ({ title: T(x), folio: fol(x.id), tc: x.n && narr ? '#f3ddd3' : th.ink, onClick: () => { this.showGroup(x.s); this.open(x.id); } })) })).filter(s => s.items.length);
+
+    const inSys = !!S.sys.sys;
+    const c = this.cm.bind(this);
+    const first = t => { const i = t.indexOf('. '); return i > 0 ? t.slice(0, i + 1) : t; };
+    const featured = !this.by ? [] : ['brecha', 'nisshara', 'dragott', 'trece'].map(id => this.by[id]).filter(x => this.vis(x)).map(x => ({
+      title: T(x), kind: K(x), hook: x.lema || first((x.pub || [''])[0]), gl: this.glyph(x.id, x.s, th.accent, false), enter: () => this.peek(x), onClick: () => { this.dismissIntro(); this.showGroup(x.s); this.open(x.id); } }));
+    const ST = this.STOPS, ti = S.tour, stp = ST[ti];
+    const tour = stp ? { title: stp.title, text: stp.text, count: this.roman(ti + 1) + ' / ' + this.roman(ST.length), hasPrev: ti > 0, isLast: ti === ST.length - 1, nextLabel: ti === ST.length - 1 ? 'TERMINAR' : 'SIGUIENTE ›' } : { title: '', text: '', count: '' };
+    const tourDots = ST.map((s, i) => ({ name: s.title, bd: i <= ti ? th.accent : th.line2, bg: i === ti ? th.accent : (i < ti ? th.soft : 'transparent'), onClick: () => this.tourGo(i) }));
+    const mb = (label, on, fn) => ({ label, col: on ? th.ink : th.dim, bg: on ? th.hl : 'transparent', ol: on ? th.soft : 'transparent', onClick: fn });
+    const mapBtns = inSys
+      ? [mb('‹ Galaxia', false, () => { const m = c(); if (m) m.closeSystem(); }), mb('Órbitas', S.orb, () => this.tb('bOrb', 'orb')), mb('Nombres', S.lab, () => this.tb('bLab', 'lab')), mb('Pausa', S.pause, () => this.tb('bPause', 'pause'))]
+      : [mb('Mapa', !S.polit, () => { if (S.polit) this.tb('bPol', 'polit'); }), mb('Político', S.polit, () => { if (!S.polit) this.tb('bPol', 'polit'); }), mb('La Brecha', S.view === 'entry' && S.cur === 'brecha', () => this.open('brecha'))];
+    const artLeft = 'clamp(672px,calc(232px + 40vw),852px)';
+    const showRollo = S.tab === 'cronologia' && !inSys;
+    return {
+      wide: W >= 1200, searchW: W >= 1200 ? 'clamp(200px,18vw,320px)' : '160px', th, narr, narrDot: narr ? '#e8634b' : 'transparent',
+      topTabs, groups,
+      q: S.q, onQ: e => this.setState({ q: e.target.value }), results, hasResults: results.length > 0,
+      toggleNarr: () => this.toggleNarr(),
+      toggleIndex: () => this.setState(s => ({ index: !s.index })), stop: e => e.stopPropagation(), showIndex: S.index, idx,
+      idxBg: S.index ? th.hl : 'transparent',
+      idxNote: narr ? visCount + ' folios, sellos levantados' : visCount + ' folios legibles de ' + ENT.length,
+      showArt: !!art, art: art || { fields: [], pub: [], oc: [], rel: [], gal: [], lead: [], redact: [] }, cons, showHint: !art && !showRollo && ti < 0 && !S.intro,
+      showIntro: S.intro && !art && ti < 0 && !S.index, featured, dismissIntro: () => this.dismissIntro(),
+      showTour: !!stp && !art && !S.index, tour, tourDots,
+      showTourBtn: !art && ti < 0 && !S.intro && !showRollo && !inSys,
+      startTour: () => this.tourGo(0), tourNext: () => this.tourGo(ti + 1), tourPrev: () => this.tourGo(ti - 1),
+      tourRead: () => { if (stp) { this.showGroup(this.by[stp.e].s); this.open(stp.e, true); } },
+      tourNarr: () => { if (!S.narr) this.toggleNarr(); this.endTour(); this.open('brecha', true); },
+      artTabs, tabDesc: !!art && at === 'desc', tabRel: !!art && at === 'rel', tabGal: !!art && at === 'gal',
+      closeArt: () => this.closeArt(), goBack: () => this.go(-1), goFwd: () => this.go(1),
+      backCol: S.hi > 0 ? th.ink : '#4a4d55', fwdCol: S.hi < S.hist.length - 1 ? th.ink : '#4a4d55',
+      unpeek: () => this.peek(null),
+      showRollo, eras, rolloLeft: (art && W - (232 + Math.min(620, Math.max(440, W * .4))) - 134 >= 560) ? 'calc(' + artLeft + ' + 44px)' : '256px', closeRollo: () => this.setState({ tab: 'mapa' }),
+      inSys, sysNameUp: (S.sys.name || '').toUpperCase(), sysName: S.sys.name || '', sysMeta: S.sys.meta || '',
+      planets: (S.sys.planets || []).map((n, i) => ({ name: n, bg: S.psel === i ? th.hl : 'transparent', onClick: () => { const m = c(); if (m) m.selPlanet(i, true); } })),
+      mapBtns, modeTop: (art && W < 1180) ? '132px' : '88px', gridLeft: art ? artLeft : '232px', ticks: ['8%', '30%', '50%', '70%', '92%'].map(t => ({ top: t })),
+      zoomIn: () => { const m = c(); if (m) m.zoom(.7); }, zoomOut: () => { const m = c(); if (m) m.zoom(1.4); },
+      recenter: () => { if (inSys) this.tb('bAll'); else this.tb('bHome'); this.setState({ view: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
